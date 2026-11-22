@@ -1,5 +1,5 @@
 from enum import Enum
-
+#---------------------TASKS ENUM ----------------------------
 class TaskStatus(str, Enum):
 
     PENDING = "pending"
@@ -10,5 +10,9 @@ class TaskSort(str,Enum):
 
     DESC = "desc"
     ASC = "asc"
+#-------------------- USER ENUM -------------------------------
+class UsersRole(str, Enum):
 
-    
+    ADMIN = "admin"
+    USER = "user"
+    SUPER_ADMIN = "super_admin"

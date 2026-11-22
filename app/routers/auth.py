@@ -1,14 +1,16 @@
 import jwt
-from fastapi import Depends,APIRouter
-from sqlalchemy import select
 import secrets
-from app.database.db import DBconnection
-from app.schemas.auth import AuthLogin
-from app.models.users_model import Users
-from fastapi import HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
+from sqlalchemy import select
 from app.core.config import settings
+from fastapi import Depends,APIRouter
+from argon2 import PasswordHasher
+from app.models.users_model import Users
+from app.database.db import DBconnection
+from fastapi import HTTPException, status
+from argon2.exceptions import VerifyMismatchError
 from app.workers.celery_app import send_message
+from app.schemas.auth import AuthLogin, AuthVerify
+from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 
 router = APIRouter(prefix="/auth",
                    tags=["auth"])
@@ -16,12 +18,27 @@ router = APIRouter(prefix="/auth",
 oauth2 = OAuth2PasswordBearer(token = "/token")
 redis = settings.REDIS_URL
 
+ph = PasswordHasher()
+
 def code_generate(length: int = 10):
     """Генерация кода подтверждения"""
 
     upper = 10**length
     code = secrets.randbelow(upper)
     return f"{code:0{length}d}"
+
+def hash_password(password):
+    """Хешируем полученный пароль"""
+    hashed_password = ph.hash(password)
+    return hashed_password
+
+def verify_password(password,hash):
+    """Проверяем пароль"""
+    try:
+        ph.verify(password,hash)
+        return True
+    except VerifyMismatchError:
+        return False
 
 @router.post("/register")
 async def login(user: AuthLogin, db:DBconnection):
@@ -52,8 +69,17 @@ async def login(user: AuthLogin, db:DBconnection):
     redis.set(name = f"verify_code:{user.login}",
               value = code,
               ex = 300)
-    
+    db.add(Users(
+        email = user.email,
+        username = user.username,
+        hash_password = hash_password(user.password),
+        is_active = True
+    ))
     return {"message":"Код подтверждения отправлен в ваш email"}
 
 @router.post("/verify-otp")
-async def verify_user()
+async def verify_user(send_code: AuthVerify,
+                      db:DBconnection):
+    """Проверка кода"""
+
+
