@@ -39,6 +39,7 @@ def verify_password(password,hash):
         return True
     except VerifyMismatchError:
         return False
+#------------- создание токена-----------------
 
 @router.post("/register")
 async def login(user: AuthLogin, db:DBconnection):
@@ -69,17 +70,44 @@ async def login(user: AuthLogin, db:DBconnection):
     redis.set(name = f"verify_code:{user.login}",
               value = code,
               ex = 300)
-    db.add(Users(
+    kimmi = Users(
         email = user.email,
         username = user.username,
         hash_password = hash_password(user.password),
         is_active = True
-    ))
+    )
+
+    db.add(kimmi)
+    await db.commit()
+    await db.refresh(kimmi)
+    
     return {"message":"Код подтверждения отправлен в ваш email"}
 
-@router.post("/verify-otp")
+@router.post("/verify-otp", status_code = status.HTTP_201_CREATED)
 async def verify_user(send_code: AuthVerify,
                       db:DBconnection):
     """Проверка кода"""
+
+    stmt = select(Users).where(Users.email == send_code.email, Users.is_active == True)
+    result = await db.execute(stmt)
+    answer = result.scalars().one_or_none()
+
+    if answer is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail = "Пользователь не найден"
+        )
+    cool_code = redis.get(name = f"verify_code:{send_code.email}")
+    if cool_code is None:
+        raise HTTPException(
+            status_code = status.HTTP_400_BAD_REQUEST,
+            detail = "Время кода истек либо неверный"
+        )
+    
+    db.add(Users(is_verify = True))
+    await db.commit
+
+
+
 
 

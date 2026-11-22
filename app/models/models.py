@@ -2,8 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import Integer,String,DateTime,func
 from datetime import datetime
-class Base(AsyncAttrs, DeclarativeBase):
-    pass
+from app.database.db import Base
 
 class Task(Base):
     __tablename__ = "task"

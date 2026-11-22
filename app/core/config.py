@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings, SettingConfigDict
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import EmailStr
 
 class Settings():
@@ -17,8 +17,8 @@ class Settings():
     DATABASE="postgres"
 
     REDIS_URL = str
-    
-    model_config = SettingConfigDict(
+
+    model_config = SettingsConfigDict(
         env_file = ".env",
         env_file_encoding = "utf-8"
         )

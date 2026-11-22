@@ -4,9 +4,7 @@ from sqlalchemy import Integer,String,DateTime,func, Boolean
 from datetime import datetime, timezone
 from app.schemas.enums import UsersRole
 from enum import Enum
-
-class Base(AsyncAttrs, DeclarativeBase):
-    pass
+from app.database.db import Base
 
 class Users(Base):
     __tablename__ = "users"
@@ -14,7 +12,7 @@ class Users(Base):
     id: Mapped[int] = mapped_column(Integer, autoincrement=True, primary_key=True)
     email: Mapped[str] = mapped_column(String(225), unique=True, nullable=True)
     username:Mapped[str] = mapped_column(String(225), nullable = True)
-    hash_password:Mapped[str] = mapped_column(String(225), nullabble=True) 
+    hash_password:Mapped[str] = mapped_column(String(225), nullable=True) 
     created_at:Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable = False)
     is_active:Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_verified:Mapped[bool] = mapped_column(Boolean, default=False, nullable=True)

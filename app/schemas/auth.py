@@ -11,7 +11,7 @@ class AuthLogin(BaseModel):
 
 class AuthVerify(BaseModel):
 
-    email: EmailStr
+    email: EmailStr 
     code: str = Field(..., min_length=6, max_length=100)
 
     @field_validator("code")
